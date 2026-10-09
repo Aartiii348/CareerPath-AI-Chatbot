@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareerPath AI Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 750px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f4f7fb;
+      color: #172033;
+    }
+    h1 { color: #3157a4; }
+    #chat {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      min-height: 280px;
+      margin-bottom: 16px;
+    }
+    .message { margin: 12px 0; white-space: pre-wrap; }
+    input {
+      box-sizing: border-box;
+      width: 78%;
+      padding: 13px;
+      border: 1px solid #ccd3df;
+      border-radius: 8px;
+    }
+    button {
+      padding: 13px 16px;
+      border: 0;
+      border-radius: 8px;
+      background: #3157a4;
+      color: white;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; cursor: wait; }
+  </style>
+</head>
+<body>
+  <h1>🎯 CareerPath AI Chatbot</h1>
+  <p>Explore AI, Data Analytics, Python, and career roadmaps.</p>
+
+  <div id="chat" aria-live="polite">
+    <div class="message"><b>CareerPath AI:</b> Hello! Ask me about AI careers, data analyst skills, or Python.</div>
+  </div>
+
+  <form id="form">
+    <input id="question" placeholder="Ask your career question..." required>
+    <button id="send" type="submit">Send</button>
+  </form>
+
+  <script>
+    const form = document.getElementById("form");
+    const questionInput = document.getElementById("question");
+    const chat = document.getElementById("chat");
+    const send = document.getElementById("send");
+
+    function addMessage(role, text) {
+      const div = document.createElement("div");
+      div.className = "message";
+      const label = document.createElement("b");
+      label.textContent = role + ": ";
+      div.appendChild(label);
+      div.appendChild(document.createTextNode(text));
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const question = questionInput.value.trim();
+      if (!question) return;
+
+      addMessage("You", question);
+      questionInput.value = "";
+      send.disabled = true;
+      send.textContent = "Thinking...";
+
+      try {
+        const response = await fetch("/api", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || data.message || "Request failed");
+        addMessage("CareerPath AI", data.answer || "No answer returned.");
+      } catch (error) {
+        addMessage("Error", error.message + ". Please check the deployment logs.");
+      } finally {
+        send.disabled = false;
+        send.textContent = "Send";
+        questionInput.focus();
+      }
+    });
+  </script>
+</body>
+</html>
